@@ -3,16 +3,15 @@
 import { useEffect, useState } from 'react';
 import PhaseTimeline from '@/components/PhaseTimeline';
 import ProgressChart from '@/components/ProgressChart';
-import StreakCounter from '@/components/StreakCounter';
 import { getSettings, getSessions, getROMEntries, getPainEntries, getStreak } from '@/lib/storage';
-import { getCurrentPhase } from '@/lib/data';
-import { formatDate, getDaysSince } from '@/lib/utils';
+import { formatDate, getDaysSince, getPainColor } from '@/lib/utils';
+import { SessionLog } from '@/types';
 
 export default function ProgressPage() {
   const [mounted, setMounted] = useState(false);
   const [settings, setSettings] = useState<ReturnType<typeof getSettings> | null>(null);
   const [streak, setStreak] = useState(0);
-  const [sessionCount, setSessionCount] = useState(0);
+  const [sessions, setSessions] = useState<SessionLog[]>([]);
   const [romEntries, setRomEntries] = useState<ReturnType<typeof getROMEntries>>([]);
   const [painEntries, setPainEntries] = useState<ReturnType<typeof getPainEntries>>([]);
 
@@ -21,7 +20,7 @@ export default function ProgressPage() {
     const storedSettings = getSettings();
     setSettings(storedSettings);
     setStreak(getStreak());
-    setSessionCount(getSessions().length);
+    setSessions(getSessions());
     setRomEntries(getROMEntries());
     setPainEntries(getPainEntries());
   }, []);
@@ -29,109 +28,128 @@ export default function ProgressPage() {
   if (!mounted || !settings) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">📊</div>
-          <div className="text-gray-500">Loading...</div>
-        </div>
+        <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
       </div>
     );
   }
 
-  const phase = getCurrentPhase(settings.startDate);
   const daysSinceStart = getDaysSince(settings.startDate);
-  const latestROM = romEntries.length > 0 ? romEntries[romEntries.length - 1].rom : 30;
-  const latestPain = painEntries.length > 0 ? painEntries[painEntries.length - 1].painAfter : 0;
+  const bestROM = romEntries.length > 0 ? Math.max(...romEntries.map((r) => r.rom)) : 30;
+  const sessionCount = sessions.length;
+
+  const statCards = [
+    { label: 'Day', value: daysSinceStart, unit: '', color: 'var(--accent)' },
+    { label: 'Streak', value: streak, unit: 'days', color: 'var(--amber)' },
+    { label: 'Sessions', value: sessionCount, unit: '', color: '#60A5FA' },
+    { label: 'Best ROM', value: bestROM, unit: '°', color: '#34D399' },
+  ];
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Progress Hub</h1>
-        <p className="text-sm text-gray-500">Track your rehab journey</p>
+    <div className="max-w-lg mx-auto px-5 pt-10 pb-6">
+      <header className="mb-6">
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-1" style={{ color: 'var(--muted)' }}>
+          Overview
+        </div>
+        <h1 className="font-serif text-4xl leading-none" style={{ color: 'var(--ink)' }}>
+          Progress
+        </h1>
+      </header>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 mb-2">
+        {statCards.map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-2xl p-4"
+            style={{ background: 'var(--surface)' }}
+          >
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center mb-3 text-sm"
+              style={{ backgroundColor: `${stat.color}20`, color: stat.color }}
+            >
+              {stat.label === 'Day' && '📅'}
+              {stat.label === 'Streak' && '🔥'}
+              {stat.label === 'Sessions' && '✓'}
+              {stat.label === 'Best ROM' && '📐'}
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-bold text-3xl tabular-nums" style={{ color: 'var(--ink)' }}>
+                {stat.value}
+              </span>
+              {stat.unit && (
+                <span className="text-sm" style={{ color: 'var(--muted)' }}>
+                  {stat.unit}
+                </span>
+              )}
+            </div>
+            <div className="font-mono text-[10px] uppercase tracking-wider mt-1" style={{ color: 'var(--muted)' }}>
+              {stat.label}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <StreakCounter streak={streak} />
-        <div className="bg-white rounded-2xl p-4 border-2 border-gray-100 text-center">
-          <div className="text-4xl mb-2">📝</div>
-          <div className="text-2xl font-bold text-[#1A1A1A]">{sessionCount}</div>
-          <div className="text-xs text-gray-500">Sessions Logged</div>
-        </div>
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-2xl p-4 border-2 border-gray-100">
-          <div className="text-sm text-gray-500 mb-1">Days Since Injury</div>
-          <div className="text-2xl font-bold text-[#1A1A1A]">{daysSinceStart}</div>
-          <div className="text-xs text-gray-400">Started {formatDate(settings.startDate)}</div>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border-2 border-gray-100">
-          <div className="text-sm text-gray-500 mb-1">Best ROM</div>
-          <div className="text-2xl font-bold text-[#2D9B6A]">{latestROM}°</div>
-          <div className="text-xs text-gray-400">Current: {latestROM}°</div>
-        </div>
-      </div>
-
-      {/* Phase Timeline */}
-      <div className="mb-6">
+      <div className="border-t border-b my-4" style={{ borderColor: 'var(--hairline)' }}>
         <PhaseTimeline startDate={settings.startDate} />
       </div>
 
-      {/* Charts */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-[#1A1A1A] mb-4">Trends</h2>
-        <ProgressChart romEntries={romEntries} painEntries={painEntries} />
-      </div>
+      <ProgressChart romEntries={romEntries} painEntries={painEntries} />
 
-      {/* Session History */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-[#1A1A1A] mb-4">Recent Sessions</h2>
-        <div className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">
-          {getSessions()
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            .slice(0, 7)
-            .map((session, index) => {
-              const completedCount = session.exercises.filter((e) => e.completed).length;
-              return (
-                <div
-                  key={session.date}
-                  className={`p-4 ${index > 0 ? 'border-t border-gray-100' : ''}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-[#1A1A1A]">
-                        {formatDate(session.date)}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Phase {session.phase} — {completedCount}/{session.exercises.length} exercises
-                      </div>
+      {/* Recent Sessions */}
+      <section className="pt-6">
+        <h2 className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
+          Recent Sessions
+        </h2>
+        {sessionCount === 0 ? (
+          <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--surface)' }}>
+            <span className="font-serif text-2xl" style={{ color: 'var(--muted)' }}>No sessions logged yet</span>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {sessions
+              .slice()
+              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              .slice(0, 10)
+              .map((session) => {
+                const completed = session.exercises.filter((e) => e.completed).length;
+                return (
+                  <div
+                    key={session.date}
+                    className="flex items-center gap-4 px-4 py-3 rounded-xl"
+                    style={{ background: 'var(--surface)' }}
+                  >
+                    <div className="font-mono text-xs" style={{ color: 'var(--ink)' }}>
+                      {formatDate(session.date)}
                     </div>
-                    <div className="text-right">
-                      <div
-                        className={`text-sm font-medium ${
-                          session.painAfter <= 2
-                            ? 'text-[#2D9B6A]'
-                            : session.painAfter <= 5
-                            ? 'text-[#FBBF24]'
-                            : 'text-[#F87171]'
-                        }`}
-                      >
-                        Pain: {session.painAfter}/10
+                    <div className="flex-1 flex items-center gap-2">
+                      <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--hairline-2)' }}>
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${(completed / session.exercises.length) * 100}%`,
+                            background: 'var(--accent)',
+                          }}
+                        />
                       </div>
-                      <div className="text-sm text-gray-400">ROM: {session.rom}°</div>
+                      <span className="font-mono text-[10px]" style={{ color: 'var(--muted)' }}>
+                        {completed}/{session.exercises.length}
+                      </span>
+                    </div>
+                    <div className="font-mono text-xs tabular" style={{ color: 'var(--ink-2)' }}>
+                      {session.rom}°
+                    </div>
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center font-mono text-[10px] font-bold"
+                      style={{ backgroundColor: `${getPainColor(session.painAfter)}20`, color: getPainColor(session.painAfter) }}
+                    >
+                      {session.painAfter}
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          {sessionCount === 0 && (
-            <div className="p-6 text-center text-gray-500">
-              No sessions logged yet. Start tracking!
-            </div>
-          )}
-        </div>
-      </div>
+                );
+              })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

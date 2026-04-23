@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSettings, saveSettings, resetAllData } from '@/lib/storage';
-import { getCurrentPhase } from '@/lib/data';
-import { PHASE_INFO } from '@/lib/data';
+import { getCurrentPhase, PHASE_INFO } from '@/lib/data';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -24,19 +23,15 @@ export default function SettingsPage() {
   if (!mounted || !settings) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⚙️</div>
-          <div className="text-gray-500">Loading...</div>
+        <div className="font-mono text-xs tracking-wider uppercase" style={{ color: 'var(--muted)' }}>
+          Loading
         </div>
       </div>
     );
   }
 
   const handleSave = () => {
-    saveSettings({
-      ...settings,
-      startDate,
-    });
+    saveSettings({ ...settings, startDate });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -51,149 +46,144 @@ export default function SettingsPage() {
   const phaseInfo = PHASE_INFO[currentPhase];
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Settings</h1>
-        <p className="text-sm text-gray-500">Customize your rehab tracker</p>
-      </div>
-
-      {/* Current Status */}
-      <div className="bg-white rounded-2xl p-4 border-2 border-gray-100 mb-6">
-        <h2 className="font-semibold text-[#1A1A1A] mb-3">Current Status</h2>
-        <div className="flex items-center gap-4">
-          <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold text-white"
-            style={{ backgroundColor: phaseInfo.color }}
-          >
-            {currentPhase}
-          </div>
-          <div>
-            <div className="font-semibold text-[#1A1A1A]">Phase {currentPhase}: {phaseInfo.name}</div>
-            <div className="text-sm text-gray-500">{phaseInfo.weeks}</div>
-          </div>
+    <div className="max-w-lg mx-auto px-6 pt-10">
+      <header className="mb-8">
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-1" style={{ color: 'var(--muted)' }}>
+          Preferences
         </div>
-      </div>
+        <h1 className="font-serif text-4xl leading-none" style={{ color: 'var(--ink)' }}>
+          Settings
+        </h1>
+      </header>
 
-      {/* Start Date */}
-      <div className="bg-white rounded-2xl p-4 border-2 border-gray-100 mb-6">
-        <h2 className="font-semibold text-[#1A1A1A] mb-3">Injury Start Date</h2>
-        <p className="text-sm text-gray-500 mb-3">
-          Set this to your injury date so the app can track your phase progress accurately.
-        </p>
+      <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
+          Current Status
+        </div>
+        <div className="font-serif text-3xl leading-none" style={{ color: 'var(--ink)' }}>
+          Phase {currentPhase} · {phaseInfo.name}
+        </div>
+        <div className="font-mono text-xs mt-2" style={{ color: 'var(--muted)' }}>
+          {phaseInfo.weeks}
+        </div>
+      </section>
+
+      <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
+          Injury Start Date
+        </div>
         <input
           type="date"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-          className="w-full p-3 bg-gray-50 rounded-xl text-[#1A1A1A] outline-none border-2 border-gray-100 focus:border-[#2D9B6A]"
+          className="w-full py-3 font-serif text-xl bg-transparent border-b outline-none"
+          style={{ borderColor: 'var(--hairline-2)', color: 'var(--ink)' }}
         />
         <button
           onClick={handleSave}
-          className={`mt-3 w-full py-3 rounded-xl font-semibold transition-colors ${
+          className="mt-4 inline-flex items-center gap-3 px-4 py-3 font-mono text-xs tracking-[0.16em] uppercase transition-colors"
+          style={
             saved
-              ? 'bg-[#2D9B6A] text-white'
-              : 'bg-[#2D9B6A] text-white hover:bg-[#248a5c]'
-          }`}
+              ? { background: 'var(--accent)', color: '#fff' }
+              : { background: 'var(--ink)', color: '#fff' }
+          }
         >
-          {saved ? '✓ Saved!' : 'Save Start Date'}
+          <span>{saved ? 'Saved' : 'Save'}</span>
+          {!saved && <span>→</span>}
         </button>
-      </div>
+      </section>
 
-      {/* Rehab Phases Reference */}
-      <div className="bg-white rounded-2xl p-4 border-2 border-gray-100 mb-6">
-        <h2 className="font-semibold text-[#1A1A1A] mb-3">Rehab Phases Overview</h2>
-        <div className="space-y-3">
+      <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-4" style={{ color: 'var(--muted)' }}>
+          Phase Reference
+        </div>
+        <div>
           {([1, 2, 3, 4] as const).map((phase) => {
             const info = PHASE_INFO[phase];
+            const isCurrent = phase === currentPhase;
             return (
-              <div key={phase} className="flex items-start gap-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                  style={{ backgroundColor: info.color }}
-                >
-                  {phase}
+              <div
+                key={phase}
+                className="flex items-baseline gap-4 py-3 border-t"
+                style={{ borderColor: 'var(--hairline)' }}
+              >
+                <span className="font-mono text-xs tabular" style={{ color: 'var(--muted)' }}>
+                  P{phase}
+                </span>
+                <div className="flex-1">
+                  <div
+                    className="font-serif text-lg leading-tight"
+                    style={{ color: isCurrent ? 'var(--ink)' : 'var(--ink-2)' }}
+                  >
+                    {info.name}
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-[#1A1A1A]">{info.name}</div>
-                  <div className="text-xs text-gray-500">{info.weeks}</div>
-                </div>
+                <span className="font-mono text-[10px] tabular uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
+                  {info.weeks.replace('Weeks ', 'W')}
+                </span>
               </div>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      {/* Important Rules */}
-      <div className="bg-[#F87171]/10 rounded-2xl p-4 mb-6">
-        <h2 className="font-semibold text-[#1A1A1A] mb-3 flex items-center gap-2">
-          <span>⚠️</span> Important Rules
-        </h2>
-        <ul className="text-sm text-gray-600 space-y-2">
-          <li className="flex items-start gap-2">
-            <span className="text-[#F87171]">•</span>
-            No leg extensions at the gym — worst exercise for fat pad impingement
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-[#F87171]">•</span>
-            No deep squats — stop at 90 degrees or before pinching
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-[#F87171]">•</span>
-            Tape daily before any physical activity
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-[#F87171]">•</span>
-            Ice for 15-20 minutes after loading exercises
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-[#F87171]">•</span>
-            Never push into pinching pain
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-[#F87171]">•</span>
-            Strength exercises every other day, not daily
-          </li>
+      <section
+        className="py-5 px-5 border-t border-b my-6"
+        style={{ borderColor: 'var(--warn)', background: 'var(--warn-soft)' }}
+      >
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--warn)' }}>
+          Hard Rules
+        </div>
+        <ul className="space-y-2 font-serif text-base leading-relaxed" style={{ color: 'var(--ink)' }}>
+          <li>No leg extensions at the gym.</li>
+          <li>No deep squats. Stop at 90° or before pinching.</li>
+          <li>Tape daily before any physical activity.</li>
+          <li>Ice 15–20 minutes after loading exercises.</li>
+          <li>Never push into pinching pain.</li>
+          <li>Strength exercises every other day, not daily.</li>
         </ul>
-      </div>
+      </section>
 
-      {/* Reset Data */}
-      <div className="bg-white rounded-2xl p-4 border-2 border-gray-100 mb-6">
-        <h2 className="font-semibold text-[#1A1A1A] mb-3">Data Management</h2>
+      <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
+          Data
+        </div>
         {showResetConfirm ? (
           <div>
-            <p className="text-sm text-gray-600 mb-3">
-              Are you sure? This will delete all your session logs, ROM entries, and settings.
-              This action cannot be undone.
+            <p className="font-serif text-base leading-relaxed mb-4" style={{ color: 'var(--ink)' }}>
+              This will delete all session logs, ROM entries, and settings. Cannot be undone.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowResetConfirm(false)}
-                className="flex-1 py-2 rounded-xl font-medium bg-gray-100 text-gray-600"
+                className="flex-1 py-3 font-mono text-xs tracking-[0.16em] uppercase"
+                style={{ border: '1px solid var(--hairline-2)', color: 'var(--ink)' }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleReset}
-                className="flex-1 py-2 rounded-xl font-medium bg-[#EF4444] text-white"
+                className="flex-1 py-3 font-mono text-xs tracking-[0.16em] uppercase"
+                style={{ background: 'var(--warn)', color: '#fff' }}
               >
-                Reset All Data
+                Reset
               </button>
             </div>
           </div>
         ) : (
           <button
             onClick={() => setShowResetConfirm(true)}
-            className="w-full py-3 rounded-xl font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+            className="font-mono text-xs tracking-[0.16em] uppercase"
+            style={{ color: 'var(--warn)' }}
           >
-            Reset All Data
+            Reset All Data →
           </button>
         )}
-      </div>
+      </section>
 
-      {/* App Info */}
-      <div className="text-center text-sm text-gray-400 mb-6">
-        <p>Knee Rehab Tracker PWA</p>
-        <p>Built for Omar's recovery journey</p>
-      </div>
+      <p className="py-8 font-mono text-[10px] tracking-[0.18em] uppercase text-center" style={{ color: 'var(--muted)' }}>
+        Knee Rehab · Built for Omar
+      </p>
     </div>
   );
 }

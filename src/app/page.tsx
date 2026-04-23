@@ -5,8 +5,7 @@ import Link from 'next/link';
 import PhaseCard from '@/components/PhaseCard';
 import StreakCounter from '@/components/StreakCounter';
 import { getSettings, getStreak, hasLoggedToday, getTodaySession, getROMEntries } from '@/lib/storage';
-import { getCurrentPhase, getExercisesForPhase } from '@/lib/data';
-import { getTodayDate, getPainEmoji, getPainColor, formatDate } from '@/lib/utils';
+import { getCurrentPhase, getExercisesForPhase, PHASE_INFO } from '@/lib/data';
 import { SessionLog } from '@/types';
 
 export default function Home() {
@@ -15,7 +14,6 @@ export default function Home() {
   const [loggedToday, setLoggedToday] = useState(false);
   const [todaySession, setTodaySession] = useState<SessionLog | null>(null);
   const [currentROM, setCurrentROM] = useState(30);
-  const [painLevel, setPainLevel] = useState(0);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -26,187 +24,145 @@ export default function Home() {
     setLoggedToday(hasLoggedToday());
     setTodaySession(getTodaySession());
     const romEntries = getROMEntries();
-    if (romEntries.length > 0) {
-      const latest = romEntries[romEntries.length - 1];
-      setCurrentROM(latest.rom);
-      if (latest.rom >= 30) {
-        // Pain was stored in a different way, default to 0
-        setPainLevel(0);
-      }
-    }
+    if (romEntries.length > 0) setCurrentROM(romEntries[romEntries.length - 1].rom);
   }, []);
 
   if (!mounted || !settings) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">🦵</div>
-          <div className="text-gray-500">Loading...</div>
-        </div>
+        <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
       </div>
     );
   }
 
   const phase = getCurrentPhase(settings.startDate);
+  const phaseInfo = PHASE_INFO[phase];
   const exercises = getExercisesForPhase(phase);
   const completedCount = todaySession?.exercises.filter((e) => e.completed).length || 0;
+  const progress = exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0;
+  const today = new Date();
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6">
+    <div className="max-w-lg mx-auto px-5 pt-10 pb-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <header className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A1A1A]">Knee Rehab</h1>
-          <p className="text-sm text-gray-500">{formatDate(new Date())}</p>
+          <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-1" style={{ color: 'var(--muted)' }}>
+            {today.toLocaleDateString('en-US', { weekday: 'long' })}
+          </div>
+          <h1 className="font-serif text-3xl" style={{ color: 'var(--ink)' }}>
+            {today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+          </h1>
         </div>
         <StreakCounter streak={streak} compact />
-      </div>
+      </header>
 
-      {/* Phase Card */}
-      <div className="mb-6">
-        <PhaseCard startDate={settings.startDate} />
-      </div>
+      <PhaseCard startDate={settings.startDate} />
 
-      {/* Today's Workout */}
-      <div className="bg-white rounded-2xl p-4 border-2 border-gray-100 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-[#1A1A1A]">Today's Workout</h2>
-          {loggedToday ? (
-            <span className="text-sm bg-[#2D9B6A]/10 text-[#2D9B6A] px-3 py-1 rounded-full font-medium">
-              ✓ Completed
-            </span>
-          ) : (
-            <span className="text-sm bg-gray-100 text-gray-500 px-3 py-1 rounded-full">
-              {completedCount}/{exercises.length}
-            </span>
-          )}
-        </div>
-
-        {exercises.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">Rest day today</p>
-        ) : (
-          <div className="space-y-2">
-            {exercises.map((exercise) => {
-              const isCompleted = todaySession?.exercises.find((e) => e.id === exercise.id)?.completed;
-              return (
-                <div
-                  key={exercise.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl ${
-                    isCompleted ? 'bg-[#2D9B6A]/5' : 'bg-gray-50'
-                  }`}
-                >
-                  <span className="text-xl">{exercise.icon}</span>
-                  <div className="flex-1">
-                    <div className={`font-medium ${isCompleted ? 'text-[#2D9B6A]' : 'text-[#1A1A1A]'}`}>
-                      {exercise.name}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {exercise.sets} × {exercise.reps}
-                    </div>
-                  </div>
-                  {isCompleted && <span className="text-[#2D9B6A]">✓</span>}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <Link
-          href="/log"
-          className={`mt-4 w-full py-3 rounded-xl font-semibold text-center block transition-colors ${
-            loggedToday
-              ? 'bg-[#2D9B6A]/10 text-[#2D9B6A]'
-              : 'bg-[#2D9B6A] text-white hover:bg-[#248a5c]'
-          }`}
+      {/* Session Status Banner */}
+      <div className="mt-5 rounded-2xl overflow-hidden">
+        <div
+          className="px-5 py-4 flex items-center justify-between"
+          style={{ backgroundColor: loggedToday ? `${phaseInfo.color}15` : 'var(--surface)', borderColor: `${phaseInfo.color}30`, border: '1px solid' }}
         >
-          {loggedToday ? 'View Session' : 'Log Today\'s Session'}
-        </Link>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: loggedToday ? phaseInfo.color : 'var(--muted)' }}
+            />
+            <span className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>
+              {loggedToday
+                ? `${completedCount} of ${exercises.length} exercises done`
+                : exercises.length > 0 ? `${exercises.length} exercises to go` : 'Rest day — recover'
+              }
+            </span>
+          </div>
+          <Link
+            href="/log"
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all active:scale-95"
+            style={{ backgroundColor: loggedToday ? 'var(--muted)' : phaseInfo.color }}
+          >
+            {loggedToday ? 'View' : 'Start'}
+          </Link>
+        </div>
+        {/* Progress bar */}
+        <div className="h-2" style={{ background: 'var(--hairline-2)' }}>
+          <div
+            className="h-full transition-all duration-500"
+            style={{ width: `${loggedToday ? 100 : progress}%`, backgroundColor: phaseInfo.color }}
+          />
+        </div>
       </div>
 
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        {/* ROM Progress */}
-        <div className="bg-white rounded-2xl p-4 border-2 border-gray-100">
-          <div className="text-sm text-gray-500 mb-2">Current ROM</div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🦵</span>
-            <span className="text-2xl font-bold text-[#2D9B6A]">{currentROM}°</span>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 mt-6">
+        {/* ROM Card */}
+        <div className="rounded-2xl p-4" style={{ background: 'var(--surface)' }}>
+          <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
+            Range of Motion
           </div>
-          <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="flex items-baseline gap-1">
+            <span className="font-bold text-4xl tabular-nums" style={{ color: 'var(--ink)' }}>
+              {currentROM}
+            </span>
+            <span className="text-xl" style={{ color: 'var(--muted)' }}>°</span>
+          </div>
+          <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: 'var(--hairline-2)' }}>
             <div
-              className="h-full bg-[#2D9B6A] rounded-full"
-              style={{ width: `${(currentROM / 135) * 100}%` }}
+              className="h-full rounded-full"
+              style={{ width: `${Math.min(100, ((currentROM - 30) / 105) * 100)}%`, backgroundColor: 'var(--accent)' }}
             />
           </div>
-          <div className="text-xs text-gray-400 mt-1">Goal: 135°</div>
+          <div className="text-xs font-mono mt-1" style={{ color: 'var(--muted)' }}>Goal 135°</div>
         </div>
 
-        {/* Quick Pain Log */}
-        <div className="bg-white rounded-2xl p-4 border-2 border-gray-100">
-          <div className="text-sm text-gray-500 mb-2">Pain Level</div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{getPainEmoji(painLevel)}</span>
-            <span
-              className="text-2xl font-bold"
-              style={{ color: getPainColor(painLevel) }}
-            >
-              {painLevel}
-            </span>
-            <span className="text-sm text-gray-400">/10</span>
+        {/* Pain Card */}
+        <div className="rounded-2xl p-4" style={{ background: 'var(--surface)' }}>
+          <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
+            Last Pain Level
           </div>
-          <div className="mt-3 flex gap-1">
-            {[0, 2, 4, 6, 8, 10].map((level) => (
-              <button
-                key={level}
-                onClick={() => setPainLevel(level)}
-                className={`flex-1 h-6 rounded text-xs font-medium transition-colors ${
-                  painLevel === level
-                    ? 'text-white'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}
-                style={painLevel === level ? { backgroundColor: getPainColor(level) } : {}}
-              >
-                {level}
-              </button>
-            ))}
-          </div>
+          {todaySession ? (
+            <>
+              <div className="flex items-baseline gap-1">
+                <span className="font-bold text-4xl tabular-nums" style={{ color: 'var(--ink)' }}>
+                  {todaySession.painAfter}
+                </span>
+                <span className="text-xl" style={{ color: 'var(--muted)' }}>/10</span>
+              </div>
+              <div className="text-xs font-mono mt-2" style={{ color: todaySession.painAfter <= 3 ? '#065F46' : todaySession.painAfter <= 6 ? '#92400E' : '#991B1B' }}>
+                {todaySession.painAfter <= 3 ? 'Feeling good' : todaySession.painAfter <= 6 ? 'Moderate' : 'Needs attention'}
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="font-bold text-3xl" style={{ color: 'var(--muted)' }}>—</span>
+              <div className="text-xs font-mono mt-2" style={{ color: 'var(--muted)' }}>No log yet</div>
+            </>
+          )}
         </div>
       </div>
 
       {/* Reminders */}
-      <div className="bg-white rounded-2xl p-4 border-2 border-gray-100 mb-6">
-        <h3 className="font-semibold text-[#1A1A1A] mb-3">Daily Reminders</h3>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🩹</span>
-            <div className="flex-1">
-              <div className="font-medium text-[#1A1A1A]">Tape Daily</div>
-              <div className="text-xs text-gray-500">Tape your knee before any activity</div>
+      <div className="mt-6">
+        <h2 className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
+          Reminders
+        </h2>
+        <div className="space-y-2">
+          {[
+            { icon: '🩹', label: 'Tape knee before activity', color: '#3B82F6' },
+            { icon: '🧊', label: 'Ice 15-20 min after loading', color: '#06B6D4' },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{ background: 'var(--surface)' }}
+            >
+              <span className="text-xl">{item.icon}</span>
+              <span className="flex-1 font-medium text-sm" style={{ color: 'var(--ink)' }}>{item.label}</span>
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
             </div>
-            <span className="text-[#2D9B6A] text-lg">✓</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🧊</span>
-            <div className="flex-1">
-              <div className="font-medium text-[#1A1A1A]">Ice After Loading</div>
-              <div className="text-xs text-gray-500">Ice for 15-20 mins after exercises</div>
-            </div>
-            <span className="text-[#2D9B6A] text-lg">✓</span>
-          </div>
+          ))}
         </div>
-      </div>
-
-      {/* Rules Reminder */}
-      <div className="bg-[#F87171]/10 rounded-2xl p-4 mb-6">
-        <h3 className="font-semibold text-[#1A1A1A] mb-2 flex items-center gap-2">
-          <span>⚠️</span> Important Rules
-        </h3>
-        <ul className="text-sm text-gray-600 space-y-1">
-          <li>• No leg extensions at the gym</li>
-          <li>• No deep squats</li>
-          <li>• Never push into pinching pain</li>
-          <li>• Strength exercises every other day</li>
-        </ul>
       </div>
     </div>
   );

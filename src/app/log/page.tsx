@@ -33,7 +33,6 @@ export default function LogPage() {
     const phaseExercises = getExercisesForPhase(currentPhase);
     setExercises(phaseExercises);
 
-    // Load existing session if any
     const todaySession = getTodaySession();
     if (todaySession) {
       setCompletedExercises(
@@ -45,13 +44,11 @@ export default function LogPage() {
       setNotes(todaySession.notes);
       setSubmitted(true);
     } else {
-      // Initialize all as not completed
       const initial: Record<string, boolean> = {};
       phaseExercises.forEach((e) => (initial[e.id] = false));
       setCompletedExercises(initial);
     }
 
-    // Load latest ROM
     const romEntries = getROMEntries();
     if (romEntries.length > 0) {
       setRom(romEntries[romEntries.length - 1].rom);
@@ -81,15 +78,14 @@ export default function LogPage() {
 
     setTimeout(() => {
       router.push('/');
-    }, 1000);
+    }, 900);
   };
 
   if (!mounted || !settings) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">📝</div>
-          <div className="text-gray-500">Loading...</div>
+        <div className="font-mono text-xs tracking-wider uppercase" style={{ color: 'var(--muted)' }}>
+          Loading
         </div>
       </div>
     );
@@ -97,115 +93,93 @@ export default function LogPage() {
 
   const completedCount = Object.values(completedExercises).filter(Boolean).length;
   const progress = exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0;
-  const allCompleted = completedCount === exercises.length;
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Log Session</h1>
-        <p className="text-sm text-gray-500">Phase {phase} — {new Date().toLocaleDateString()}</p>
-      </div>
+    <div className="max-w-lg mx-auto px-6 pt-10">
+      <header className="mb-8">
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-1" style={{ color: 'var(--muted)' }}>
+          Phase {phase} · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+        </div>
+        <h1 className="font-serif text-4xl leading-none" style={{ color: 'var(--ink)' }}>
+          Log Session
+        </h1>
+      </header>
 
-      {/* Progress Bar */}
-      <div className="bg-white rounded-2xl p-4 border-2 border-gray-100 mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-medium text-[#1A1A1A]">Session Progress</span>
-          <span className="text-sm text-gray-500">
+      <div className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
+        <div className="flex items-baseline justify-between mb-3">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase" style={{ color: 'var(--muted)' }}>
+            Session Progress
+          </span>
+          <span className="font-mono text-xs tabular" style={{ color: 'var(--ink)' }}>
             {completedCount}/{exercises.length}
           </span>
         </div>
-        <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-[2px] relative" style={{ background: 'var(--hairline-2)' }}>
           <div
-            className="h-full bg-[#2D9B6A] rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
+            className="absolute inset-y-0 left-0 transition-all"
+            style={{ width: `${progress}%`, background: 'var(--ink)' }}
           />
         </div>
       </div>
 
-      {/* Pain Before */}
-      <div className="mb-4">
-        <PainInput
-          value={painBefore}
-          onChange={setPainBefore}
-          label="Pain Level (Before Exercise)"
-        />
-      </div>
+      <PainInput value={painBefore} onChange={setPainBefore} label="Pain Before" />
 
-      {/* Exercises */}
-      <div className="space-y-3 mb-4">
-        <h2 className="font-semibold text-[#1A1A1A]">Exercises</h2>
+      <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-2" style={{ color: 'var(--muted)' }}>
+          Exercises
+        </div>
         {exercises.length === 0 ? (
-          <div className="bg-white rounded-2xl p-6 border-2 border-gray-100 text-center">
-            <div className="text-4xl mb-3">😌</div>
-            <p className="text-gray-500">Rest day — no exercises scheduled</p>
-          </div>
+          <p className="font-serif text-2xl leading-tight mt-4" style={{ color: 'var(--muted)' }}>
+            Rest day. No exercises scheduled.
+          </p>
         ) : (
-          exercises.map((exercise) => (
-            <ExerciseItem
-              key={exercise.id}
-              exercise={exercise}
-              completed={completedExercises[exercise.id] || false}
-              onToggle={() => handleToggleExercise(exercise.id)}
-            />
-          ))
+          <div>
+            {exercises.map((exercise, i) => (
+              <ExerciseItem
+                key={exercise.id}
+                exercise={exercise}
+                completed={completedExercises[exercise.id] || false}
+                onToggle={() => handleToggleExercise(exercise.id)}
+                index={i}
+              />
+            ))}
+          </div>
         )}
-      </div>
+      </section>
 
-      {/* Pain After */}
-      <div className="mb-4">
-        <PainInput
-          value={painAfter}
-          onChange={setPainAfter}
-          label="Pain Level (After Exercise)"
+      <PainInput value={painAfter} onChange={setPainAfter} label="Pain After" />
+      <ROMSlider value={rom} onChange={setRom} />
+
+      <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
+        <label className="font-mono text-[10px] tracking-[0.18em] uppercase block mb-3" style={{ color: 'var(--muted)' }}>
+          Notes
+        </label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="How did it feel? Any pinching? Observations."
+          className="w-full h-28 p-0 bg-transparent font-serif text-lg leading-relaxed outline-none resize-none"
+          style={{ color: 'var(--ink)' }}
         />
-      </div>
+      </section>
 
-      {/* ROM */}
-      <div className="mb-4">
-        <ROMSlider value={rom} onChange={setRom} />
-      </div>
-
-      {/* Notes */}
-      <div className="mb-6">
-        <div className="bg-white rounded-2xl p-4 border-2 border-gray-100">
-          <label className="font-semibold text-[#1A1A1A] block mb-2">Session Notes</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="How did it feel? Any pinching? Observations..."
-            className="w-full h-24 p-3 bg-gray-50 rounded-xl text-[#1A1A1A] placeholder-gray-400 resize-none outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Submit */}
       {submitted ? (
-        <div className="bg-[#2D9B6A] rounded-2xl p-4 text-center mb-6">
-          <div className="text-3xl mb-2">✓</div>
-          <div className="text-white font-semibold">Session Logged!</div>
-          <div className="text-white/80 text-sm mt-1">Redirecting to dashboard...</div>
+        <div className="my-6 py-8 border-y text-center" style={{ borderColor: 'var(--ink)', background: 'var(--ink)', color: '#fff' }}>
+          <div className="font-serif text-3xl leading-none mb-2">Logged</div>
+          <div className="font-mono text-[10px] tracking-[0.18em] uppercase opacity-70">
+            Returning to dashboard
+          </div>
         </div>
       ) : (
         <button
           onClick={handleSubmit}
-          className="w-full bg-[#2D9B6A] text-white py-4 rounded-2xl font-semibold text-lg mb-6 hover:bg-[#248a5c] transition-colors"
+          className="my-6 w-full flex items-center justify-between px-5 py-4 font-mono text-xs tracking-[0.16em] uppercase transition-colors"
+          style={{ background: 'var(--ink)', color: '#fff' }}
         >
-          Done — Save Session
+          <span>Save Session</span>
+          <span>→</span>
         </button>
       )}
-
-      {/* Quick Tips */}
-      <div className="bg-[#FBBF24]/10 rounded-2xl p-4 mb-6">
-        <h3 className="font-semibold text-[#1A1A1A] mb-2 flex items-center gap-2">
-          💡 Quick Tips
-        </h3>
-        <ul className="text-sm text-gray-600 space-y-1">
-          <li>• Remember to tape before exercising</li>
-          <li>• Ice for 15-20 mins after if you feel any inflammation</li>
-          <li>• Strength exercises every other day, not daily</li>
-          <li>• Never push into pinching pain</li>
-        </ul>
-      </div>
     </div>
   );
 }

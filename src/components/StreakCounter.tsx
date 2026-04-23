@@ -8,26 +8,35 @@ interface StreakCounterProps {
 export default function StreakCounter({ streak, compact = false }: StreakCounterProps) {
   if (compact) {
     return (
-      <div className="flex items-center gap-2 bg-[#2D9B6A]/10 px-3 py-2 rounded-xl">
-        <span className="text-lg">🔥</span>
-        <span className="font-bold text-[#2D9B6A]">{streak}</span>
-        <span className="text-xs text-gray-500">day streak</span>
+      <div className="text-right">
+        <div className="flex items-center justify-end gap-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--amber)">
+            <path d="M12 2L9.5 9H2L7.5 13.5L5.5 21L12 16.5L18.5 21L16.5 13.5L22 9H14.5L12 2Z"/>
+          </svg>
+          <span className="font-bold text-3xl tabular-nums" style={{ color: 'var(--ink)' }}>
+            {streak}
+          </span>
+        </div>
+        <div className="text-xs font-mono uppercase tracking-wider mt-1" style={{ color: 'var(--muted)' }}>
+          Day Streak
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 border-2 border-gray-100 text-center">
-      <div className="text-4xl mb-2">🔥</div>
-      <div className="text-4xl font-bold text-[#2D9B6A] mb-1">{streak}</div>
-      <div className="text-sm text-gray-500">
-        {streak === 1 ? 'Day Streak' : 'Day Streak'}
+    <div className="text-center py-6">
+      <div className="flex items-center justify-center gap-3">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--amber)">
+          <path d="M12 2L9.5 9H2L7.5 13.5L5.5 21L12 16.5L18.5 21L16.5 13.5L22 9H14.5L12 2Z"/>
+        </svg>
+        <span className="font-bold text-6xl tabular-nums" style={{ color: 'var(--ink)' }}>
+          {streak}
+        </span>
       </div>
-      {streak >= 7 && (
-        <div className="mt-3 text-xs bg-[#FBBF24]/20 text-[#D97706] px-3 py-1 rounded-full inline-block">
-          🎉 {streak >= 30 ? 'Incredible!' : 'Keep it up!'} 
-        </div>
-      )}
+      <div className="text-sm font-mono uppercase tracking-wider mt-2" style={{ color: 'var(--muted)' }}>
+        Consecutive Days
+      </div>
     </div>
   );
 }

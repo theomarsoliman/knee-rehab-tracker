@@ -1,6 +1,20 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+  --bg: #F6F3EC;
+  --surface: #FFFFFF;
+  --ink: #0F0F0E;
+  --ink-2: #3D3A33;
+  --muted: #8A857C;
+  --hairline: #E8E3D7;
+  --hairline-2: #D8D2C2;
+  --accent: #2E4A3A;
+  --accent-2: #5C7A66;
+  --accent-soft: #EAF0EC;
+  --warn: #A85D4A;
+  --warn-soft: #F5E8E3;
+  --amber: #B8893C;
+}
 
 * {
   -webkit-tap-highlight-color: transparent;
@@ -11,9 +25,23 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), ui-monospace, "SF Mono", monospace;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 input[type="range"] {
@@ -21,6 +49,7 @@ input[type="range"] {
   appearance: none;
   background: transparent;
   cursor: pointer;
+  height: 24px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -29,20 +58,45 @@ input[type="range"]::-webkit-slider-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #2D9B6A;
-  border: 4px solid white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: var(--ink);
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--hairline-2);
   margin-top: -10px;
+  cursor: grab;
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.1);
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 2px;
-  background: #E5E7EB;
+  background: var(--hairline-2);
 }
 
-@layer utilities {
-  .safe-top {
-    padding-top: max(env(safe-area-inset-top), 20px);
-  }
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+textarea, input {
+  font-family: inherit;
+}
+
+/* Smooth page transitions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+main > div {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Active press effect */
+.active-press:active {
+  transform: scale(0.97);
+  transition: transform 0.1s;
 }
