@@ -37,6 +37,7 @@ export interface PainEntry {
 }
 
 export interface AppSettings {
-  startDate: string; // YYYY-MM-DD
+  startDate: string; // YYYY-MM-DD — program start date (anchor for phase math)
+  injuryDate: string; // YYYY-MM-DD — cosmetic/historical only, NOT used for phase math
   notificationsEnabled: boolean;
 }

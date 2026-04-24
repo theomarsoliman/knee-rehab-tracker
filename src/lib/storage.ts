@@ -8,17 +8,42 @@ const KEYS = {
   REMINDERS: 'knee-rehab-reminders',
 };
 
-const DEFAULT_START_DATE = '2025-12-25';
+const DEFAULT_START_DATE = '2026-04-24';
+const DEFAULT_INJURY_DATE = '2025-12-24';
+
+// Returns the given date offset by N months, as YYYY-MM-DD.
+const shiftMonths = (isoDate: string, months: number): string => {
+  const d = new Date(isoDate);
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().split('T')[0];
+};
 
 export const getSettings = (): AppSettings => {
   if (typeof window === 'undefined') {
-    return { startDate: DEFAULT_START_DATE, notificationsEnabled: false };
+    return {
+      startDate: DEFAULT_START_DATE,
+      injuryDate: DEFAULT_INJURY_DATE,
+      notificationsEnabled: false,
+    };
   }
   const stored = localStorage.getItem(KEYS.SETTINGS);
   if (stored) {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored) as Partial<AppSettings>;
+    // Graceful migration: if existing user has startDate but no injuryDate,
+    // default injuryDate to (startDate − 4 months) so it reads as "~4 months ago".
+    const startDate = parsed.startDate ?? DEFAULT_START_DATE;
+    const injuryDate = parsed.injuryDate ?? shiftMonths(startDate, -4);
+    return {
+      startDate,
+      injuryDate,
+      notificationsEnabled: parsed.notificationsEnabled ?? false,
+    };
   }
-  return { startDate: DEFAULT_START_DATE, notificationsEnabled: false };
+  return {
+    startDate: DEFAULT_START_DATE,
+    injuryDate: DEFAULT_INJURY_DATE,
+    notificationsEnabled: false,
+  };
 };
 
 export const saveSettings = (settings: AppSettings): void => {

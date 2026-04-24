@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSettings, saveSettings, resetAllData } from '@/lib/storage';
 import { getCurrentPhase, PHASE_INFO } from '@/lib/data';
+import { getTimeSinceInjury } from '@/lib/utils';
 
 export default function SettingsPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [settings, setSettings] = useState<ReturnType<typeof getSettings> | null>(null);
-  const [startDate, setStartDate] = useState('2025-12-25');
+  const [startDate, setStartDate] = useState('2026-04-24');
+  const [injuryDate, setInjuryDate] = useState('2025-12-24');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -18,6 +20,7 @@ export default function SettingsPage() {
     const storedSettings = getSettings();
     setSettings(storedSettings);
     setStartDate(storedSettings.startDate);
+    setInjuryDate(storedSettings.injuryDate);
   }, []);
 
   if (!mounted || !settings) {
@@ -31,7 +34,7 @@ export default function SettingsPage() {
   }
 
   const handleSave = () => {
-    saveSettings({ ...settings, startDate });
+    saveSettings({ ...settings, startDate, injuryDate });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -70,7 +73,7 @@ export default function SettingsPage() {
 
       <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
         <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
-          Injury Start Date
+          Program Start Date
         </div>
         <input
           type="date"
@@ -79,6 +82,25 @@ export default function SettingsPage() {
           className="w-full py-3 font-serif text-xl bg-transparent border-b outline-none"
           style={{ borderColor: 'var(--hairline-2)', color: 'var(--ink)' }}
         />
+        <p className="mt-2 font-mono text-[10px] tracking-[0.12em] uppercase" style={{ color: 'var(--muted)' }}>
+          Anchors phase calculations
+        </p>
+      </section>
+
+      <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
+          Injury Date
+        </div>
+        <input
+          type="date"
+          value={injuryDate}
+          onChange={(e) => setInjuryDate(e.target.value)}
+          className="w-full py-3 font-serif text-xl bg-transparent border-b outline-none"
+          style={{ borderColor: 'var(--hairline-2)', color: 'var(--ink)' }}
+        />
+        <p className="mt-2 font-mono text-[10px] tracking-[0.12em] uppercase" style={{ color: 'var(--muted)' }}>
+          Historical only · {getTimeSinceInjury(injuryDate)}
+        </p>
         <button
           onClick={handleSave}
           className="mt-4 inline-flex items-center gap-3 px-4 py-3 font-mono text-xs tracking-[0.16em] uppercase transition-colors"

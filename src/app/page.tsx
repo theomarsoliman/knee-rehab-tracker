@@ -6,6 +6,7 @@ import PhaseCard from '@/components/PhaseCard';
 import StreakCounter from '@/components/StreakCounter';
 import { getSettings, getStreak, hasLoggedToday, getTodaySession, getROMEntries } from '@/lib/storage';
 import { getCurrentPhase, getExercisesForPhase, PHASE_INFO } from '@/lib/data';
+import { getDaysSince, getTimeSinceInjury } from '@/lib/utils';
 import { SessionLog } from '@/types';
 
 export default function Home() {
@@ -41,6 +42,8 @@ export default function Home() {
   const completedCount = todaySession?.exercises.filter((e) => e.completed).length || 0;
   const progress = exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0;
   const today = new Date();
+  const programDay = Math.max(1, getDaysSince(settings.startDate) + 1);
+  const injuryLabel = getTimeSinceInjury(settings.injuryDate);
 
   return (
     <div className="max-w-lg mx-auto px-5 pt-10 pb-6">
@@ -58,6 +61,26 @@ export default function Home() {
       </header>
 
       <PhaseCard startDate={settings.startDate} />
+
+      {/* Program day + injury context */}
+      <div className="mt-4 flex items-center justify-between px-1">
+        <div>
+          <div className="font-mono text-[10px] tracking-[0.18em] uppercase" style={{ color: 'var(--muted)' }}>
+            Program
+          </div>
+          <div className="font-serif text-lg" style={{ color: 'var(--ink)' }}>
+            Day {programDay} of program
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="font-mono text-[10px] tracking-[0.18em] uppercase" style={{ color: 'var(--muted)' }}>
+            Injury
+          </div>
+          <div className="font-serif text-lg" style={{ color: 'var(--ink)' }}>
+            {injuryLabel}
+          </div>
+        </div>
+      </div>
 
       {/* Session Status Banner */}
       <div className="mt-5 rounded-2xl overflow-hidden">

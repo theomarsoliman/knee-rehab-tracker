@@ -18,6 +18,21 @@ export const getDaysSince = (startDate: string): number => {
   return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 };
 
+// Human-readable "time since injury" string.
+// Uses days under 14, weeks under 8, otherwise months.
+export const getTimeSinceInjury = (injuryDate: string): string => {
+  const days = getDaysSince(injuryDate);
+  if (days <= 0) return 'Today';
+  if (days === 1) return '1 day since injury';
+  if (days < 14) return `${days} days since injury`;
+  if (days < 56) {
+    const weeks = Math.floor(days / 7);
+    return `${weeks} week${weeks === 1 ? '' : 's'} since injury`;
+  }
+  const months = Math.floor(days / 30);
+  return `${months} month${months === 1 ? '' : 's'} since injury`;
+};
+
 export const getPhaseProgress = (startDate: string): { current: number; total: number; percentage: number } => {
   const days = getDaysSince(startDate);
   const total = 84;
