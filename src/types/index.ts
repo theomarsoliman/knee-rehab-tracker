@@ -36,8 +36,18 @@ export interface PainEntry {
   painAfter: number;
 }
 
+export type ConditionId =
+  | 'general'
+  | 'acl'
+  | 'mcl'
+  | 'pcl'
+  | 'meniscus'
+  | 'patellar'
+  | 'post-surgical';
+
 export interface AppSettings {
-  startDate: string; // YYYY-MM-DD — program start date (anchor for phase math)
-  injuryDate: string; // YYYY-MM-DD — cosmetic/historical only, NOT used for phase math
+  startDate: string; // YYYY-MM-DD, program start date (anchor for phase math)
+  injuryDate: string; // YYYY-MM-DD, cosmetic/historical only, NOT used for phase math
   notificationsEnabled: boolean;
+  condition: ConditionId;
 }

@@ -1,4 +1,4 @@
-import { AppSettings, DailyROM, PainEntry, SessionLog } from '@/types';
+import { AppSettings, ConditionId, DailyROM, PainEntry, SessionLog } from '@/types';
 
 const KEYS = {
   SETTINGS: 'knee-rehab-settings',
@@ -18,31 +18,50 @@ const shiftMonths = (isoDate: string, months: number): string => {
   return d.toISOString().split('T')[0];
 };
 
+const VALID_CONDITIONS: ConditionId[] = [
+  'general',
+  'acl',
+  'mcl',
+  'pcl',
+  'meniscus',
+  'patellar',
+  'post-surgical',
+];
+
+const normalizeCondition = (value: unknown): ConditionId => {
+  return typeof value === 'string' && (VALID_CONDITIONS as string[]).includes(value)
+    ? (value as ConditionId)
+    : 'general';
+};
+
 export const getSettings = (): AppSettings => {
   if (typeof window === 'undefined') {
     return {
       startDate: DEFAULT_START_DATE,
       injuryDate: DEFAULT_INJURY_DATE,
       notificationsEnabled: false,
+      condition: 'general',
     };
   }
   const stored = localStorage.getItem(KEYS.SETTINGS);
   if (stored) {
     const parsed = JSON.parse(stored) as Partial<AppSettings>;
     // Graceful migration: if existing user has startDate but no injuryDate,
-    // default injuryDate to (startDate − 4 months) so it reads as "~4 months ago".
+    // default injuryDate to (startDate minus 4 months) so it reads as "~4 months ago".
     const startDate = parsed.startDate ?? DEFAULT_START_DATE;
     const injuryDate = parsed.injuryDate ?? shiftMonths(startDate, -4);
     return {
       startDate,
       injuryDate,
       notificationsEnabled: parsed.notificationsEnabled ?? false,
+      condition: normalizeCondition(parsed.condition),
     };
   }
   return {
     startDate: DEFAULT_START_DATE,
     injuryDate: DEFAULT_INJURY_DATE,
     notificationsEnabled: false,
+    condition: 'general',
   };
 };
 

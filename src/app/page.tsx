@@ -82,40 +82,103 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Session Status Banner */}
-      <div className="mt-5 rounded-2xl overflow-hidden">
+      {/* Today's Session card */}
+      {exercises.length === 0 ? (
         <div
-          className="px-5 py-4 flex items-center justify-between"
-          style={{ backgroundColor: loggedToday ? `${phaseInfo.color}15` : 'var(--surface)', borderColor: `${phaseInfo.color}30`, border: '1px solid' }}
+          className="mt-5 rounded-2xl p-5 flex items-center gap-3"
+          style={{ background: 'var(--surface)', border: '1px solid var(--hairline-2)' }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: loggedToday ? phaseInfo.color : 'var(--muted)' }}
-            />
-            <span className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>
-              {loggedToday
-                ? `${completedCount} of ${exercises.length} exercises done`
-                : exercises.length > 0 ? `${exercises.length} exercises to go` : 'Rest day — recover'
-              }
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: 'var(--accent-soft)' }}>
+            {'\u{1F6CF}'}
+          </div>
+          <div className="flex-1">
+            <div className="font-mono text-[10px] tracking-[0.18em] uppercase" style={{ color: 'var(--muted)' }}>
+              Rest day
+            </div>
+            <div className="font-serif text-lg" style={{ color: 'var(--ink)' }}>
+              Recover. No exercises scheduled.
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="mt-5 rounded-2xl overflow-hidden"
+          style={{
+            background: 'var(--surface)',
+            border: `1px solid ${phaseInfo.color}40`,
+            boxShadow: `0 2px 0 ${phaseInfo.color}10`,
+          }}
+        >
+          {/* Top: label + status */}
+          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: loggedToday ? phaseInfo.color : 'var(--muted)' }}
+              />
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase" style={{ color: 'var(--muted)' }}>
+                Today{"’"}s Session
+              </span>
+            </div>
+            <span
+              className="font-mono text-[10px] tracking-[0.14em] uppercase px-2 py-0.5 rounded-md"
+              style={{ background: `${phaseInfo.color}18`, color: phaseInfo.color }}
+            >
+              Phase {phase}
             </span>
           </div>
-          <Link
-            href="/log"
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all active:scale-95"
-            style={{ backgroundColor: loggedToday ? 'var(--muted)' : phaseInfo.color }}
-          >
-            {loggedToday ? 'View' : 'Start'}
-          </Link>
+
+          {/* Heading: big number */}
+          <div className="px-5 pt-2">
+            <div className="flex items-baseline gap-2">
+              <span className="font-bold text-5xl tabular-nums leading-none" style={{ color: 'var(--ink)' }}>
+                {loggedToday ? completedCount : exercises.length - completedCount}
+              </span>
+              <span className="font-serif text-xl" style={{ color: 'var(--ink-2)' }}>
+                {loggedToday
+                  ? (completedCount === exercises.length ? 'all done' : 'done')
+                  : (completedCount > 0 ? 'to go' : exercises.length === 1 ? 'exercise' : 'exercises')}
+              </span>
+            </div>
+            <div className="mt-1 font-mono text-[11px]" style={{ color: 'var(--muted)' }}>
+              {completedCount} of {exercises.length} complete
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="px-5 pt-3">
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--hairline-2)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${loggedToday ? 100 : progress}%`,
+                  backgroundColor: phaseInfo.color,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="px-5 pt-4 pb-5">
+            <Link
+              href="/log"
+              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm font-bold tracking-wide transition-all active:scale-[0.98]"
+              style={{
+                background: loggedToday && completedCount === exercises.length ? 'var(--surface)' : phaseInfo.color,
+                color: loggedToday && completedCount === exercises.length ? 'var(--ink)' : '#fff',
+                border: loggedToday && completedCount === exercises.length ? '1px solid var(--hairline-2)' : 'none',
+              }}
+            >
+              <span>
+                {loggedToday
+                  ? (completedCount === exercises.length ? 'Review session' : 'Continue session')
+                  : 'Start session'}
+              </span>
+              <span aria-hidden>{'→'}</span>
+            </Link>
+          </div>
         </div>
-        {/* Progress bar */}
-        <div className="h-2" style={{ background: 'var(--hairline-2)' }}>
-          <div
-            className="h-full transition-all duration-500"
-            style={{ width: `${loggedToday ? 100 : progress}%`, backgroundColor: phaseInfo.color }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3 mt-6">
@@ -167,23 +230,33 @@ export default function Home() {
 
       {/* Reminders */}
       <div className="mt-6">
-        <h2 className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
-          Reminders
-        </h2>
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="font-mono text-[10px] tracking-[0.18em] uppercase" style={{ color: 'var(--muted)' }}>
+            Reminders
+          </h2>
+          <Link
+            href="/resources"
+            className="font-mono text-[10px] tracking-[0.14em] uppercase"
+            style={{ color: 'var(--accent)' }}
+          >
+            Guides {'→'}
+          </Link>
+        </div>
         <div className="space-y-2">
           {[
-            { icon: '🩹', label: 'Tape knee before activity', color: '#3B82F6' },
-            { icon: '🧊', label: 'Ice 15-20 min after loading', color: '#06B6D4' },
+            { icon: '🩹', label: 'Tape knee before activity', color: '#3B82F6', href: '/resources' },
+            { icon: '🧊', label: 'Ice 15-20 min after loading', color: '#06B6D4', href: '/resources' },
           ].map((item) => (
-            <div
+            <Link
               key={item.label}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              href={item.href}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all active:scale-[0.99]"
               style={{ background: 'var(--surface)' }}
             >
               <span className="text-xl">{item.icon}</span>
               <span className="flex-1 font-medium text-sm" style={{ color: 'var(--ink)' }}>{item.label}</span>
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-            </div>
+            </Link>
           ))}
         </div>
       </div>

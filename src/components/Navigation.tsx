@@ -33,6 +33,13 @@ const LibraryIcon = ({ active }: IconProps) => (
   </svg>
 );
 
+const GuidesIcon = ({ active }: IconProps) => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V5z" fill={active ? 'currentColor' : 'none'} />
+    <path d="M8 8h6M8 12h6" stroke={active ? 'var(--bg)' : 'currentColor'} strokeWidth="1.5" />
+  </svg>
+);
+
 const SettingsIcon = ({ active }: IconProps) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.5} strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3" fill={active ? 'currentColor' : 'none'}/>
@@ -45,6 +52,7 @@ const navItems = [
   { href: '/log', label: 'Log', Icon: LogIcon },
   { href: '/progress', label: 'Progress', Icon: ProgressIcon },
   { href: '/exercises', label: 'Library', Icon: LibraryIcon },
+  { href: '/resources', label: 'Guides', Icon: GuidesIcon },
   { href: '/settings', label: 'Settings', Icon: SettingsIcon },
 ];
 
@@ -56,21 +64,21 @@ export default function Navigation() {
       className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md border-t"
       style={{ background: 'rgba(246,243,236,0.95)', borderColor: 'var(--hairline)', backdropFilter: 'blur(12px)' }}
     >
-      <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
+      <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-1">
         {navItems.map(({ href, label, Icon }) => {
           const isActive = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className="flex flex-col items-center justify-center w-full h-full gap-1.5 rounded-xl transition-colors relative"
+              className="flex flex-col items-center justify-center w-full h-full gap-1 rounded-xl transition-colors relative"
               style={{ color: isActive ? 'var(--accent)' : 'var(--muted)' }}
             >
               {isActive && (
-                <div className="absolute w-12 h-12 rounded-full opacity-10" style={{ backgroundColor: 'var(--accent)' }} />
+                <div className="absolute w-11 h-11 rounded-full opacity-10" style={{ backgroundColor: 'var(--accent)' }} />
               )}
               <Icon active={isActive} />
-              <span className="text-[10px] tracking-[0.1em] uppercase font-semibold">{label}</span>
+              <span className="text-[9px] tracking-[0.08em] uppercase font-semibold">{label}</span>
             </Link>
           );
         })}

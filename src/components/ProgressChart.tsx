@@ -113,6 +113,15 @@ export default function ProgressChart({ romEntries, painEntries }: ProgressChart
   return (
     <div>
       <LineChart title="Max Flexion" points={sortedROM} max={135} unit="°" stroke="var(--ink)" />
+      {sortedROM.length > 0 && (
+        <p
+          className="font-mono text-[10px] leading-snug tracking-wide -mt-2 mb-2"
+          style={{ color: 'var(--muted)' }}
+        >
+          Flexion is how far your knee bends. 90{'°'} sits in a chair, 120{'°'} is a light squat,
+          135{'°'} is near full, 150{'°'} is heel to butt.
+        </p>
+      )}
       <LineChart title="Pain After" points={sortedPain} max={10} unit="" stroke="var(--warn)" />
     </div>
   );

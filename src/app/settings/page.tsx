@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 import { getSettings, saveSettings, resetAllData } from '@/lib/storage';
 import { getCurrentPhase, PHASE_INFO } from '@/lib/data';
 import { getTimeSinceInjury } from '@/lib/utils';
+import { ConditionId } from '@/types';
+
+const CONDITION_OPTIONS: { id: ConditionId; label: string }[] = [
+  { id: 'general', label: 'General' },
+  { id: 'acl', label: 'ACL' },
+  { id: 'mcl', label: 'MCL' },
+  { id: 'pcl', label: 'PCL' },
+  { id: 'meniscus', label: 'Meniscus' },
+  { id: 'patellar', label: "Patellar / Runner's Knee" },
+  { id: 'post-surgical', label: 'Post-surgical (general)' },
+];
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -12,6 +23,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<ReturnType<typeof getSettings> | null>(null);
   const [startDate, setStartDate] = useState('2026-04-24');
   const [injuryDate, setInjuryDate] = useState('2025-12-24');
+  const [condition, setCondition] = useState<ConditionId>('general');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -21,6 +33,7 @@ export default function SettingsPage() {
     setSettings(storedSettings);
     setStartDate(storedSettings.startDate);
     setInjuryDate(storedSettings.injuryDate);
+    setCondition(storedSettings.condition);
   }, []);
 
   if (!mounted || !settings) {
@@ -34,7 +47,7 @@ export default function SettingsPage() {
   }
 
   const handleSave = () => {
-    saveSettings({ ...settings, startDate, injuryDate });
+    saveSettings({ ...settings, startDate, injuryDate, condition });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -113,6 +126,37 @@ export default function SettingsPage() {
           <span>{saved ? 'Saved' : 'Save'}</span>
           {!saved && <span>→</span>}
         </button>
+      </section>
+
+      <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
+        <div className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3" style={{ color: 'var(--muted)' }}>
+          Condition
+        </div>
+        <div className="relative">
+          <select
+            value={condition}
+            onChange={(e) => setCondition(e.target.value as ConditionId)}
+            className="w-full appearance-none py-3 pr-10 font-serif text-xl bg-transparent border-b outline-none"
+            style={{ borderColor: 'var(--hairline-2)', color: 'var(--ink)' }}
+            aria-label="Knee condition"
+          >
+            {CONDITION_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 font-mono text-xs"
+            style={{ color: 'var(--muted)' }}
+          >
+            {'▾'}
+          </span>
+        </div>
+        <p className="mt-2 font-mono text-[10px] tracking-[0.12em] uppercase" style={{ color: 'var(--muted)' }}>
+          Tailors taping guide and resources
+        </p>
       </section>
 
       <section className="py-5 border-t" style={{ borderColor: 'var(--hairline)' }}>
